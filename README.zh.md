@@ -10,52 +10,119 @@ Game Claw 为 AI 智能体提供完整的卡牌游戏基础设施。一个智能
 
 ## 快速开始
 
+### 安装
+
+```bash
+npm install -g @game-claw/cli
+```
+
 ### 作为荷官（开房）
 
 ```bash
-npm install @game-claw/core @game-claw/texas-holdem
+game-claw dealer --game texas-holdem --buy-in 500 --commission 2
 ```
 
-```typescript
-import { DealerNode, generateIdentity, CloudflareTransport } from '@game-claw/core';
-import { TexasHoldemPlugin } from '@game-claw/texas-holdem';
+启动后会打印邀请链接和本地 WebSocket 网关：
 
-const dealer = new DealerNode(
-  new TexasHoldemPlugin(),
-  generateIdentity(),
-  '0.1.0',
-  { gameType: 'texas-holdem', chipProvider: { type: 'local' },
-    chipUnit: 'pts', minBet: 10, maxBet: 100, buyIn: 500, commission: 2 },
-  new CloudflareTransport(),
-);
-const url = await dealer.createRoom();
-console.log('邀请链接:', url);
 ```
+============================================================
+  Game Claw Dealer
+============================================================
+  Game:       texas-holdem
+  Buy-in:     500
+  Commission: 2/player/hand
+
+  Invite URL: wss://abc-xyz.trycloudflare.com
+  Gateway:    ws://127.0.0.1:9001
+============================================================
+```
+
+- 把 **邀请链接** 分享给玩家。
+- OpenClaw 连接 **网关** 即可监控房间状态。
 
 ### 作为玩家（加入房间）
 
 ```bash
-npm install @game-claw/core
+game-claw player --url wss://abc-xyz.trycloudflare.com
 ```
 
-```typescript
-import { PlayerNode, generateIdentity } from '@game-claw/core';
+加入游戏并启动本地网关给 OpenClaw 连接：
 
-const player = new PlayerNode(generateIdentity(), '0.1.0');
-await player.join('wss://abc-xyz.trycloudflare.com');
-
-player.onMyTurn(async (turn) => {
-  const action = turn.validActions.find(a => a.type === 'call' && a.affordable)
-    ?? turn.validActions.find(a => a.type === 'check')
-    ?? turn.validActions[0];
-  await player.sendAction(action);
-});
 ```
+============================================================
+  Game Claw Player
+============================================================
+  Game:      texas-holdem
+  Gateway:   ws://127.0.0.1:9002
+============================================================
+```
+
+OpenClaw 连接网关后，游戏事件（`your-turn`、`game-end` 等）会自动转发。OpenClaw 做出决策后，通过网关发回操作 — 全程不用写代码。
+
+### 荷官 CLI 参数
+
+```
+game-claw dealer [options]
+
+--game <type>       texas-holdem | blackjack | dou-di-zhu  （默认: texas-holdem）
+--buy-in <n>        每人初始筹码                            （默认: 500）
+--min-bet <n>       最小下注                               （默认: 10）
+--max-bet <n>       最大下注                               （默认: 100）
+--commission <n>    荷官每人每手佣金                         （默认: 2）
+--port <n>          本地网关端口（给 OpenClaw 连接）          （默认: 9001）
+--chips <type>      筹码类型: local | http                  （默认: local）
+--chips-url <url>   积分服务地址（配合 --chips http）
+--chips-token <t>   积分服务鉴权令牌
+--timeout <ms>      操作超时时间                            （默认: 30000）
+--local             使用本地传输（不走 Cloudflare）
+```
+
+### 玩家 CLI 参数
+
+```
+game-claw player [options]
+
+--url <url>         荷官给的邀请链接（必填）
+--port <n>          本地网关端口（给 OpenClaw 连接）          （默认: 9002）
+```
+
+### 配合本地积分服务
+
+本地筹码管理（推荐新手使用）：
+
+```bash
+cd examples/points-server
+npm install
+npm run generate-secret
+npm start
+```
+
+然后用 HTTP 筹码启动荷官：
+
+```bash
+game-claw dealer --game texas-holdem --chips http --chips-url http://127.0.0.1:3100 --chips-token <SECRET>
+```
+
+## 工作原理
+
+```
+荷官 CLI                                 玩家 CLI
+┌──────────────┐  Cloudflare Tunnel  ┌──────────────┐
+│  DealerNode  │◄──── wss:// ──────►│  PlayerNode   │
+└──────┬───────┘                     └──────┬───────┘
+       │ ws://127.0.0.1:9001                │ ws://127.0.0.1:9002
+       ▼                                    ▼
+   OpenClaw                             OpenClaw
+  （监控房间）                           （AI 决策）
+```
+
+两边都暴露一个本地 WebSocket 网关。OpenClaw 连接后自动收发游戏事件。不用写任何代码。
 
 ## 包列表
 
 | 包名 | 说明 |
 |------|------|
+| [`@game-claw/cli`](packages/cli/) | CLI 工具 — `game-claw dealer` / `game-claw player` |
 | [`@game-claw/core`](packages/core/) | 引擎、传输层、加密、筹码管理（[设计文档](packages/core/README.zh.md)） |
 | [`@game-claw/texas-holdem`](packages/texas-holdem/) | 德州扑克插件（[规则说明](packages/texas-holdem/README.zh.md)） |
 | [`@game-claw/blackjack`](packages/blackjack/) | 21点插件（[规则说明](packages/blackjack/README.zh.md)） |
@@ -65,6 +132,7 @@ player.onMyTurn(async (turn) => {
 
 ```
 packages/
+  cli/               CLI 工具（game-claw 命令）
   core/              引擎、WebSocket 传输、加密、筹码提供者
   texas-holdem/      德州扑克游戏规则
   blackjack/         21点游戏规则
@@ -93,35 +161,17 @@ pnpm install
 ### 运行测试
 
 ```bash
-# 全部测试（28 个文件，264 个用例）
-pnpm test
-# 或
-npx vitest run
-
-# 单个包
-npx vitest run packages/texas-holdem
-
-# 监听模式
-npx vitest
-```
-
-### 本地积分服务（筹码测试用）
-
-```bash
-cd examples/points-server
-npm install
-npm run generate-secret   # 生成 .env 鉴权密钥
-npm start                 # 启动在 http://127.0.0.1:3100
-npm test                  # 安全测试
+pnpm test              # 全部 264 个测试
+npx vitest run         # 同上
+npx vitest             # 监听模式
 ```
 
 ### 项目约定
 
 - **pnpm workspaces** 管理 monorepo
-- **TypeScript** 严格模式
+- **TypeScript** 严格模式，**纯 ESM**
 - **vitest** 测试框架
-- **纯 ESM** — 所有包使用 `"type": "module"`
-- **开发免构建** — 包直接指向 `.ts` 源文件。生产环境使用 `tsc` 编译。
+- **开发免构建** — 包直接指向 `.ts` 源文件
 
 ## 许可证
 

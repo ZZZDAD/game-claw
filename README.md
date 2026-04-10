@@ -10,52 +10,119 @@ Three games ship out of the box: **Texas Hold'em**, **Blackjack**, and **Dou Di 
 
 ## Quick Start
 
+### Install
+
+```bash
+npm install -g @game-claw/cli
+```
+
 ### As a Dealer (host a room)
 
 ```bash
-npm install @game-claw/core @game-claw/texas-holdem
+game-claw dealer --game texas-holdem --buy-in 500 --commission 2
 ```
 
-```typescript
-import { DealerNode, generateIdentity, CloudflareTransport } from '@game-claw/core';
-import { TexasHoldemPlugin } from '@game-claw/texas-holdem';
+This starts a game room and prints an invite URL + a local WebSocket gateway:
 
-const dealer = new DealerNode(
-  new TexasHoldemPlugin(),
-  generateIdentity(),
-  '0.1.0',
-  { gameType: 'texas-holdem', chipProvider: { type: 'local' },
-    chipUnit: 'pts', minBet: 10, maxBet: 100, buyIn: 500, commission: 2 },
-  new CloudflareTransport(),
-);
-const url = await dealer.createRoom();
-console.log('Share this link:', url);
 ```
+============================================================
+  Game Claw Dealer
+============================================================
+  Game:       texas-holdem
+  Buy-in:     500
+  Commission: 2/player/hand
+
+  Invite URL: wss://abc-xyz.trycloudflare.com
+  Gateway:    ws://127.0.0.1:9001
+============================================================
+```
+
+- Share the **invite URL** with players.
+- OpenClaw connects to the **gateway** to monitor the room.
 
 ### As a Player (join a room)
 
 ```bash
-npm install @game-claw/core
+game-claw player --url wss://abc-xyz.trycloudflare.com
 ```
 
-```typescript
-import { PlayerNode, generateIdentity } from '@game-claw/core';
+This joins the game and starts a local gateway for OpenClaw:
 
-const player = new PlayerNode(generateIdentity(), '0.1.0');
-await player.join('wss://abc-xyz.trycloudflare.com');
-
-player.onMyTurn(async (turn) => {
-  const action = turn.validActions.find(a => a.type === 'call' && a.affordable)
-    ?? turn.validActions.find(a => a.type === 'check')
-    ?? turn.validActions[0];
-  await player.sendAction(action);
-});
 ```
+============================================================
+  Game Claw Player
+============================================================
+  Game:      texas-holdem
+  Gateway:   ws://127.0.0.1:9002
+============================================================
+```
+
+OpenClaw connects to the gateway. Game events (`your-turn`, `game-end`, etc.) are forwarded automatically. When OpenClaw decides an action, it sends it back through the gateway — no code needed.
+
+### Dealer CLI Options
+
+```
+game-claw dealer [options]
+
+--game <type>       texas-holdem | blackjack | dou-di-zhu  (default: texas-holdem)
+--buy-in <n>        Initial chips per player               (default: 500)
+--min-bet <n>       Minimum bet                            (default: 10)
+--max-bet <n>       Maximum bet                            (default: 100)
+--commission <n>    Dealer fee per player per hand          (default: 2)
+--port <n>          Local gateway port for OpenClaw         (default: 9001)
+--chips <type>      Chip provider: local | http             (default: local)
+--chips-url <url>   Points server URL (for --chips http)
+--chips-token <t>   Points server auth token
+--timeout <ms>      Action timeout                         (default: 30000)
+--local             Use local transport (no Cloudflare)
+```
+
+### Player CLI Options
+
+```
+game-claw player [options]
+
+--url <url>         Invite URL from the dealer (required)
+--port <n>          Local gateway port for OpenClaw         (default: 9002)
+```
+
+### With Local Points Server
+
+For local chip management (recommended for beginners):
+
+```bash
+cd examples/points-server
+npm install
+npm run generate-secret
+npm start
+```
+
+Then start the dealer with HTTP chips:
+
+```bash
+game-claw dealer --game texas-holdem --chips http --chips-url http://127.0.0.1:3100 --chips-token <SECRET>
+```
+
+## How It Works
+
+```
+Dealer CLI                              Player CLI
+┌──────────────┐  Cloudflare Tunnel  ┌──────────────┐
+│  DealerNode  │◄──── wss:// ──────►│  PlayerNode   │
+└──────┬───────┘                     └──────┬───────┘
+       │ ws://127.0.0.1:9001                │ ws://127.0.0.1:9002
+       ▼                                    ▼
+   OpenClaw                             OpenClaw
+  (room monitor)                      (AI decisions)
+```
+
+Both sides expose a local WebSocket gateway. OpenClaw connects to receive game events and send actions. No code writing required.
 
 ## Packages
 
 | Package | Description |
 |---------|-------------|
+| [`@game-claw/cli`](packages/cli/) | CLI tool — `game-claw dealer` / `game-claw player` |
 | [`@game-claw/core`](packages/core/) | Engine, transport, crypto, chip providers ([design docs](packages/core/README.md)) |
 | [`@game-claw/texas-holdem`](packages/texas-holdem/) | Texas Hold'em plugin ([rules](packages/texas-holdem/README.md)) |
 | [`@game-claw/blackjack`](packages/blackjack/) | Blackjack plugin ([rules](packages/blackjack/README.md)) |
@@ -65,7 +132,8 @@ player.onMyTurn(async (turn) => {
 
 ```
 packages/
-  core/              Engine, transport, crypto, chip providers
+  cli/               CLI tool (game-claw command)
+  core/              Engine, WebSocket transport, crypto, chip providers
   texas-holdem/      Texas Hold'em game rules
   blackjack/         Blackjack game rules
   dou-di-zhu/        Dou Di Zhu game rules
@@ -93,35 +161,17 @@ pnpm install
 ### Run Tests
 
 ```bash
-# All tests (264 tests across 28 files)
-pnpm test
-# or
-npx vitest run
-
-# Single package
-npx vitest run packages/texas-holdem
-
-# Watch mode
-npx vitest
-```
-
-### Points Server (local chip testing)
-
-```bash
-cd examples/points-server
-npm install
-npm run generate-secret   # creates .env with auth token
-npm start                 # http://127.0.0.1:3100
-npm test                  # security tests
+pnpm test              # all 264 tests
+npx vitest run         # same thing
+npx vitest             # watch mode
 ```
 
 ### Conventions
 
 - **pnpm workspaces** monorepo
-- **TypeScript** strict mode
+- **TypeScript** strict mode, **ESM only**
 - **vitest** for testing
-- **ESM only** — all packages use `"type": "module"`
-- **No build step** for development — packages point to `.ts` source. Use `tsc` for production builds.
+- **No build step** for development — packages point to `.ts` source
 
 ## License
 
