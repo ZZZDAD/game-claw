@@ -122,8 +122,7 @@ Batch: chipProvider.batchSettle({ gameId, settlements: [...] })
 
 | Type | Config | Use Case |
 |------|--------|----------|
-| `local` | `{ type: 'local' }` | In-memory, testing only |
-| `http` | `{ type: 'http', url, authToken }` | REST server (see `examples/points-server`) |
+| `http` | `{ type: 'http', url, authToken }` | HTTP points server. The CLI auto-starts a built-in server if no URL is given. See `examples/points-server` for a standalone version with audit logs. |
 | `evm` | `{ type: 'evm', rpcUrl, chainId, contractAddress }` | Ethereum / Polygon / BSC |
 | `solana` | `{ type: 'solana', rpcUrl, programId }` | Solana mainnet / devnet |
 

@@ -92,7 +92,7 @@ When `settings.dealerPeek` is enabled:
 ```typescript
 const roomConfig = {
   gameType: 'blackjack',
-  chipProvider: { type: 'local' },
+  chipProvider: { type: 'http', url: 'http://127.0.0.1:3100', authToken: '<token>' },
   chipUnit: 'pts',
   minBet: 10,
   maxBet: 100,

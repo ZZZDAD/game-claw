@@ -30,9 +30,8 @@ Dealer usage:
   --max-bet <n>       Maximum bet (default: 100)
   --commission <n>    Dealer fee per player per hand (default: 2)
   --port <n>          Local WebSocket port for OpenClaw (default: 9001)
-  --chips <type>      Chip provider: local, http (default: local)
-  --chips-url <url>   Points server URL (for --chips http)
-  --chips-token <t>   Points server auth token (for --chips http)
+  --chips-url <url>   Points server URL (auto-starts built-in server if omitted)
+  --chips-token <t>   Points server auth token (auto-generated if omitted)
   --timeout <ms>      Action timeout in ms (default: 30000)
   --local             Use local transport instead of Cloudflare Tunnel
 

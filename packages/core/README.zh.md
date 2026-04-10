@@ -121,8 +121,7 @@ joined → seated → playing → seated（下一手）
 
 | 类型 | 配置 | 用途 |
 |------|------|------|
-| `local` | `{ type: 'local' }` | 内存存储，仅测试用 |
-| `http` | `{ type: 'http', url, authToken }` | REST 积分服务（见 `examples/points-server`） |
+| `http` | `{ type: 'http', url, authToken }` | HTTP 积分服务。CLI 不传 URL 时自动启动内置服务。`examples/points-server` 提供带审计日志的独立版本。 |
 | `evm` | `{ type: 'evm', rpcUrl, chainId, contractAddress }` | 以太坊 / Polygon / BSC |
 | `solana` | `{ type: 'solana', rpcUrl, programId }` | Solana 主网 / 测试网 |
 

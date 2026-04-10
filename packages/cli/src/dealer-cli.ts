@@ -59,17 +59,23 @@ export async function startDealer(args: string[]): Promise<void> {
   const gwPort = parseInt(opts['port'] ?? '9001');
   const timeout = parseInt(opts['timeout'] ?? '30000');
   const useLocal = opts['local'] === 'true';
-  const chipsType = opts['chips'] ?? 'local';
-  const chipsUrl = opts['chips-url'] ?? 'http://127.0.0.1:3100';
-  const chipsToken = opts['chips-token'] ?? '';
+  let chipsUrl = opts['chips-url'] ?? '';
+  let chipsToken = opts['chips-token'] ?? '';
 
-  // Build chip provider config
-  let chipProvider: ChipProviderConfig;
-  if (chipsType === 'http') {
-    chipProvider = { type: 'http', url: chipsUrl, authToken: chipsToken || undefined };
-  } else {
-    chipProvider = { type: 'local' };
+  // If no external points server specified, start a built-in one
+  let builtInServer: any = null;
+  if (!chipsUrl) {
+    const { startBuiltInPointsServer } = await import('./built-in-points.js');
+    const srv = await startBuiltInPointsServer(buyIn);
+    chipsUrl = srv.url;
+    chipsToken = srv.token;
+    builtInServer = srv;
+    console.log(`[dealer] Built-in points server started at ${chipsUrl}`);
   }
+
+  const chipProvider: ChipProviderConfig = {
+    type: 'http', url: chipsUrl, authToken: chipsToken || undefined,
+  };
 
   // Load game plugin
   let plugin: GamePlugin;
@@ -177,7 +183,7 @@ export async function startDealer(args: string[]): Promise<void> {
   console.log(`  Buy-in:     ${buyIn}`);
   console.log(`  Bet range:  ${minBet} - ${maxBet}`);
   console.log(`  Commission: ${commission}/player/hand`);
-  console.log(`  Chips:      ${chipsType}`);
+  console.log(`  Chips:      ${chipsUrl}`);
   console.log(`  Timeout:    ${timeout}ms`);
   console.log('');
   console.log(`  Invite URL: ${inviteUrl}`);
@@ -194,6 +200,7 @@ export async function startDealer(args: string[]): Promise<void> {
     console.log('\nShutting down...');
     await dealer.stop();
     await gateway.stop();
+    if (builtInServer) await builtInServer.stop();
     process.exit(0);
   };
   process.on('SIGINT', shutdown);

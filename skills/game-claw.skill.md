@@ -28,7 +28,7 @@ Before starting, confirm with the user:
 - **Game type**: Texas Hold'em / Blackjack / Dou Di Zhu?
 - **Buy-in**: How many chips to start? (default: 500)
 - **Commission**: Your fee per player per hand? (default: 2)
-- **Chip system**: Local (default) or HTTP points server?
+- **Chip system**: Built-in (default) or external points server?
 
 ### Start the Room
 
@@ -48,10 +48,12 @@ For Dou Di Zhu:
 game-claw dealer --game dou-di-zhu --buy-in 500
 ```
 
-With a points server:
+With an external points server:
 ```bash
-game-claw dealer --game texas-holdem --chips http --chips-url http://127.0.0.1:3100 --chips-token <SECRET>
+game-claw dealer --game texas-holdem --chips-url http://127.0.0.1:3100 --chips-token <SECRET>
 ```
+
+> **Note:** If you omit `--chips-url`, the CLI automatically starts a built-in points server with file persistence. No extra setup needed.
 
 ### What Happens
 
@@ -91,9 +93,8 @@ Messages you can send to the gateway:
 --max-bet <n>       Maximum bet                            (default: 100)
 --commission <n>    Dealer fee per player per hand          (default: 2)
 --port <n>          Gateway port for OpenClaw               (default: 9001)
---chips <type>      local | http                           (default: local)
---chips-url <url>   Points server URL
---chips-token <t>   Points server auth token
+--chips-url <url>   External points server URL (auto-starts built-in if omitted)
+--chips-token <t>   Points server auth token  (auto-generated if omitted)
 --timeout <ms>      Action timeout                         (default: 30000)
 --local             Local transport (no Cloudflare)
 ```

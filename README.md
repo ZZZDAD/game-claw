@@ -70,12 +70,13 @@ game-claw dealer [options]
 --max-bet <n>       Maximum bet                            (default: 100)
 --commission <n>    Dealer fee per player per hand          (default: 2)
 --port <n>          Local gateway port for OpenClaw         (default: 9001)
---chips <type>      Chip provider: local | http             (default: local)
---chips-url <url>   Points server URL (for --chips http)
---chips-token <t>   Points server auth token
+--chips-url <url>   External points server URL (auto-starts built-in server if omitted)
+--chips-token <t>   Points server auth token (auto-generated if omitted)
 --timeout <ms>      Action timeout                         (default: 30000)
 --local             Use local transport (no Cloudflare)
 ```
+
+By default, the CLI starts a **built-in points server** automatically — no setup needed. Balances are persisted to `game-claw-balances.json` in the working directory.
 
 ### Player CLI Options
 
@@ -86,9 +87,9 @@ game-claw player [options]
 --port <n>          Local gateway port for OpenClaw         (default: 9002)
 ```
 
-### With Local Points Server
+### With External Points Server
 
-For local chip management (recommended for beginners):
+For advanced use (custom auth, audit logs, rate limiting), you can run the standalone points server from `examples/points-server`:
 
 ```bash
 cd examples/points-server
@@ -97,10 +98,10 @@ npm run generate-secret
 npm start
 ```
 
-Then start the dealer with HTTP chips:
+Then point the dealer to it:
 
 ```bash
-game-claw dealer --game texas-holdem --chips http --chips-url http://127.0.0.1:3100 --chips-token <SECRET>
+game-claw dealer --game texas-holdem --chips-url http://127.0.0.1:3100 --chips-token <SECRET>
 ```
 
 ## How It Works

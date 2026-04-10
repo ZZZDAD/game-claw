@@ -28,7 +28,7 @@
 - **游戏类型**：德州扑克 / 21 点 / 斗地主？
 - **买入**：初始筹码多少？（默认：500）
 - **佣金**：每手每人收多少？（默认：2）
-- **筹码系统**：本地（默认）还是 HTTP 积分服务？
+- **筹码系统**：内置（默认）还是外部积分服务？
 
 ### 启动房间
 
@@ -48,10 +48,12 @@ game-claw dealer --game blackjack --buy-in 500
 game-claw dealer --game dou-di-zhu --buy-in 500
 ```
 
-配合积分服务：
+配合外部积分服务：
 ```bash
-game-claw dealer --game texas-holdem --chips http --chips-url http://127.0.0.1:3100 --chips-token <SECRET>
+game-claw dealer --game texas-holdem --chips-url http://127.0.0.1:3100 --chips-token <SECRET>
 ```
+
+> **提示：** 如果不传 `--chips-url`，CLI 会自动启动内置积分服务并持久化到文件，无需额外配置。
 
 ### 启动后
 
@@ -91,9 +93,8 @@ Gateway:    ws://127.0.0.1:9001
 --max-bet <n>       最大下注                               （默认: 100）
 --commission <n>    荷官每人每手佣金                         （默认: 2）
 --port <n>          网关端口（给 OpenClaw 连接）             （默认: 9001）
---chips <type>      local | http                           （默认: local）
---chips-url <url>   积分服务地址
---chips-token <t>   积分服务鉴权令牌
+--chips-url <url>   外部积分服务地址（不填则自动启动内置服务）
+--chips-token <t>   积分服务鉴权令牌（不填则自动生成）
 --timeout <ms>      操作超时时间                            （默认: 30000）
 --local             本地传输（不走 Cloudflare）
 ```

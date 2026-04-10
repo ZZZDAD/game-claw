@@ -92,7 +92,7 @@ Game Claw 引擎的 21 点插件。庄家是真实玩家，不是虚拟庄。
 ```typescript
 const roomConfig = {
   gameType: 'blackjack',
-  chipProvider: { type: 'local' },
+  chipProvider: { type: 'http', url: 'http://127.0.0.1:3100', authToken: '<token>' },
   chipUnit: 'pts',
   minBet: 10,
   maxBet: 100,

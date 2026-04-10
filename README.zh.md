@@ -70,11 +70,12 @@ game-claw dealer [options]
 --max-bet <n>       最大下注                               （默认: 100）
 --commission <n>    荷官每人每手佣金                         （默认: 2）
 --port <n>          本地网关端口（给 OpenClaw 连接）          （默认: 9001）
---chips <type>      筹码类型: local | http                  （默认: local）
---chips-url <url>   积分服务地址（配合 --chips http）
---chips-token <t>   积分服务鉴权令牌
+--chips-url <url>   外部积分服务地址（不填则自动启动内置积分服务）
+--chips-token <t>   积分服务鉴权令牌（不填则自动生成）
 --timeout <ms>      操作超时时间                            （默认: 30000）
 --local             使用本地传输（不走 Cloudflare）
+
+默认情况下，CLI 会 **自动启动内置积分服务** — 无需额外配置。余额持久化到工作目录下的 `game-claw-balances.json`。
 ```
 
 ### 玩家 CLI 参数
@@ -86,9 +87,9 @@ game-claw player [options]
 --port <n>          本地网关端口（给 OpenClaw 连接）          （默认: 9002）
 ```
 
-### 配合本地积分服务
+### 使用外部积分服务
 
-本地筹码管理（推荐新手使用）：
+如需高级功能（自定义鉴权、审计日志、速率限制），可以运行 `examples/points-server` 独立积分服务：
 
 ```bash
 cd examples/points-server
@@ -97,10 +98,10 @@ npm run generate-secret
 npm start
 ```
 
-然后用 HTTP 筹码启动荷官：
+然后指向它：
 
 ```bash
-game-claw dealer --game texas-holdem --chips http --chips-url http://127.0.0.1:3100 --chips-token <SECRET>
+game-claw dealer --game texas-holdem --chips-url http://127.0.0.1:3100 --chips-token <SECRET>
 ```
 
 ## 工作原理
