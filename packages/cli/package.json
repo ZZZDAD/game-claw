@@ -1,0 +1,24 @@
+{
+  "name": "@game-claw/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "game-claw": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@game-claw/core": "workspace:*",
+    "@game-claw/texas-holdem": "workspace:*",
+    "@game-claw/blackjack": "workspace:*",
+    "@game-claw/dou-di-zhu": "workspace:*",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.10",
+    "typescript": "^5.4.0",
+    "vitest": "^3.1.0"
+  }
+}
