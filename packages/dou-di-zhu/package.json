@@ -1,13 +1,45 @@
 {
   "name": "@game-claw/dou-di-zhu",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "type": "module",
+  "description": "Dou Di Zhu (Fight the Landlord) plugin for game-claw \u2014 3-player, bombs, spring",
   "main": "./dist/plugin.js",
   "types": "./dist/plugin.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./card-patterns": {
+      "types": "./dist/card-patterns.d.ts",
+      "default": "./dist/card-patterns.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/__tests__",
+    "README.md",
+    "README.zh.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc",
-    "test": "vitest run",
-    "test:simulation": "vitest run --testPathPattern=simulation"
+    "prebuild": "rm -rf dist",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "dou-di-zhu",
+    "landlord",
+    "card-game",
+    "game-claw"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZZZDAD/game-claw",
+    "directory": "packages/dou-di-zhu"
   },
   "dependencies": {
     "@game-claw/core": "workspace:*"

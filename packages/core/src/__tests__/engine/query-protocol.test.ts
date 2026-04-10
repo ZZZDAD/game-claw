@@ -12,7 +12,8 @@ import { DealerNode } from '../../engine/dealer.js';
 import { PlayerNode } from '../../engine/player.js';
 import { generateIdentity, identityToPlayerInfo } from '../../crypto/keys.js';
 import { LocalTransport } from '../../transport/local.js';
-import type { GamePlugin, GameState, PlayerInfo, RoomConfig, DealerLogger } from '../../types/index.js';
+import type { GamePlugin, GameState, PlayerInfo, RoomConfig } from '../../types/index.js';
+import type { DealerLogger } from '../../engine/dealer.js';
 
 // Simple test plugin
 const createTestPlugin = (): GamePlugin => ({

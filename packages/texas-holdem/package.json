@@ -1,16 +1,41 @@
 {
   "name": "@game-claw/texas-holdem",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "type": "module",
-  "main": "./src/plugin.ts",
-  "types": "./src/plugin.ts",
+  "description": "Texas Hold'em No-Limit poker plugin for game-claw",
+  "main": "./dist/plugin.js",
+  "types": "./dist/plugin.d.ts",
   "exports": {
-    ".": "./src/plugin.ts"
+    ".": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/__tests__",
+    "README.md",
+    "README.zh.md"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc",
-    "test": "vitest run",
-    "test:simulation": "vitest run --testPathPattern=simulation"
+    "prebuild": "rm -rf dist",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "texas-holdem",
+    "poker",
+    "card-game",
+    "game-claw"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZZZDAD/game-claw",
+    "directory": "packages/texas-holdem"
   },
   "dependencies": {
     "@game-claw/core": "workspace:*"

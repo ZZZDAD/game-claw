@@ -1,13 +1,26 @@
 {
   "name": "@game-claw/cli",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "type": "module",
+  "description": "CLI tool for game-claw — game-claw dealer / player / action",
   "bin": {
-    "game-claw": "./src/index.ts"
+    "game-claw": "./dist/index.js"
+  },
+  "files": ["dist", "README.md"],
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc",
+    "prebuild": "rm -rf dist",
     "test": "vitest run"
+  },
+  "keywords": ["game-claw", "cli", "card-game", "ai-agent"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZZZDAD/game-claw",
+    "directory": "packages/cli"
   },
   "dependencies": {
     "@game-claw/core": "workspace:*",

@@ -8,8 +8,9 @@ import { PlayerNode } from '../../engine/player.js';
 import { GameEngine } from '../../engine/game-engine.js';
 import { generateIdentity, identityToPlayerInfo } from '../../crypto/keys.js';
 import type {
-  GamePlugin, GameState, PlayerInfo, RoomConfig, DealerLogger,
+  GamePlugin, GameState, PlayerInfo, RoomConfig,
 } from '../../types/index.js';
+import type { DealerLogger } from '../../engine/dealer.js';
 
 // === Minimal test plugin ===
 const createTestPlugin = (): GamePlugin => ({

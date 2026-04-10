@@ -1,4 +1,5 @@
-#!/usr/bin/env npx tsx
+#!/usr/bin/env node
+export {};
 /**
  * game-claw CLI
  *

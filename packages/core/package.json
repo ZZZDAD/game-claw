@@ -1,16 +1,43 @@
 {
   "name": "@game-claw/core",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "description": "Cryptographic card game engine \u2014 transport, crypto, chip providers, dealer/player nodes",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/__tests__",
+    "README.md",
+    "README.zh.md"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "prebuild": "rm -rf dist",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "card-game",
+    "poker",
+    "blackjack",
+    "crypto",
+    "decentralized",
+    "ai-agent"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZZZDAD/game-claw",
+    "directory": "packages/core"
   },
   "dependencies": {
     "tweetnacl": "^1.0.3",
