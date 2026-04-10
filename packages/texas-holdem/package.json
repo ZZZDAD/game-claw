@@ -1,0 +1,22 @@
+{
+  "name": "@game-claw/texas-holdem",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/plugin.ts",
+  "types": "./src/plugin.ts",
+  "exports": {
+    ".": "./src/plugin.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:simulation": "vitest run --testPathPattern=simulation"
+  },
+  "dependencies": {
+    "@game-claw/core": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^3.1.0",
+    "typescript": "^5.4.0"
+  }
+}

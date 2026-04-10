@@ -1,0 +1,4 @@
+packages:
+  - 'packages/*'
+  - 'points-server'
+  - 'simulation'

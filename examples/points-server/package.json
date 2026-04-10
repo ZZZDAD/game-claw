@@ -1,0 +1,20 @@
+{
+  "name": "points-server-example",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Secure local points server for game-claw dealers. Includes auth, rate limiting, input validation, and file persistence.",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
+    "generate-secret": "tsx src/generate-secret.ts",
+    "test": "tsx src/test-security.ts"
+  },
+  "dependencies": {
+    "express": "^4.22.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "tsx": "^4.19.0",
+    "typescript": "^5.4.0"
+  }
+}

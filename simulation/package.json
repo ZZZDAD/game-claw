@@ -1,0 +1,21 @@
+{
+  "name": "simulation",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/run-20-rounds.ts"
+  },
+  "dependencies": {
+    "@game-claw/core": "workspace:*",
+    "@game-claw/blackjack": "workspace:*",
+    "@game-claw/texas-holdem": "workspace:*",
+    "@game-claw/dou-di-zhu": "workspace:*",
+    "ws": "^8.16.0",
+    "tweetnacl": "^1.0.3",
+    "tweetnacl-util": "^0.15.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.4.0"
+  }
+}
