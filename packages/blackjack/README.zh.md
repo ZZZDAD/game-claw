@@ -1,3 +1,5 @@
+[English](README.md) | **中文**
+
 # @game-claw/blackjack
 
 Game Claw 引擎的 21 点插件。庄家是真实玩家，不是虚拟庄。

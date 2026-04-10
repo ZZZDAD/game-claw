@@ -1,3 +1,5 @@
+[English](README.md) | **中文**
+
 # @game-claw/texas-holdem
 
 Game Claw 引擎的德州扑克（无限注）插件。

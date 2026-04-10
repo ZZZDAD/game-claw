@@ -1,3 +1,5 @@
+**English** | [中文](README.zh.md)
+
 # @game-claw/blackjack
 
 Blackjack (21) plugin for the Game Claw engine. The banker is a real player, not the house.

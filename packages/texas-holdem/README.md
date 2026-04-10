@@ -1,3 +1,5 @@
+**English** | [中文](README.zh.md)
+
 # @game-claw/texas-holdem
 
 Texas Hold'em No-Limit poker plugin for the Game Claw engine.

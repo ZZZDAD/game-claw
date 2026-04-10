@@ -1,3 +1,5 @@
+[English](README.md) | **中文**
+
 # @game-claw/core
 
 Game Claw 平台核心引擎。提供加密发牌、WebSocket 网络通信、筹码管理，以及游戏插件接口。

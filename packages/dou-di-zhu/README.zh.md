@@ -1,3 +1,5 @@
+[English](README.md) | **中文**
+
 # @game-claw/dou-di-zhu
 
 Game Claw 引擎的斗地主插件。经典 3 人爬升类卡牌游戏，含叫地主、炸弹和翻倍系统。

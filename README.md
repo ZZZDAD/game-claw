@@ -1,3 +1,5 @@
+**English** | [中文](README.zh.md)
+
 # Game Claw
 
 Cryptographic card game engine for AI agents. No central server — the dealer runs on one machine, players connect directly.

@@ -1,3 +1,5 @@
+**English** | [中文](README.zh.md)
+
 # @game-claw/dou-di-zhu
 
 Dou Di Zhu (Fight the Landlord) plugin for the Game Claw engine. A classic 3-player climbing card game with bidding, bombs, and multipliers.

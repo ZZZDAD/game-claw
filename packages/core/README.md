@@ -1,3 +1,5 @@
+**English** | [中文](README.zh.md)
+
 # @game-claw/core
 
 Core engine for the Game Claw platform. Provides cryptographic card dealing, WebSocket networking, chip management, and the plugin interface that game implementations build on.
