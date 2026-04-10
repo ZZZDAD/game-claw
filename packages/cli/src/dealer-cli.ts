@@ -3,20 +3,17 @@
  *
  * Starts:
  *   1. DealerNode with Cloudflare Tunnel (or local transport)
- *   2. Local WS gateway on --port for OpenClaw to connect and monitor
- *
- * OpenClaw receives: room-state, hand-start, hand-end, player-join, player-leave
- * OpenClaw does NOT need to make game decisions — the dealer is automated.
+ *   2. Built-in points server (if no --chips-url)
+ *   3. AgentBridge → connects to AI agent gateway, pushes room events
  */
 import { parseArgs } from './parse-args.js';
-import { Gateway } from './gateway.js';
+import { AgentBridge, resolveAgentConfig } from './agent-bridge.js';
 import {
-  DealerNode, generateIdentity, serializeIdentity,
+  DealerNode, generateIdentity,
   LocalTransport, CloudflareTransport,
   identityToPlayerInfo,
 } from '@game-claw/core';
 import type { RoomConfig, GamePlugin, DealerLogger, ChipProviderConfig } from '@game-claw/core';
-
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -24,9 +21,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function tryImport(pkg: string, relative: string): Promise<any> {
   try { return await import(pkg); } catch {}
-  // Fallback: resolve relative to this file's location in the monorepo
-  const abs = join(__dirname, relative);
-  return await import(pathToFileURL(abs).href);
+  return await import(pathToFileURL(join(__dirname, relative)).href);
 }
 
 async function loadPlugin(gameType: string): Promise<GamePlugin> {
@@ -56,13 +51,13 @@ export async function startDealer(args: string[]): Promise<void> {
   const minBet = parseInt(opts['min-bet'] ?? '10');
   const maxBet = parseInt(opts['max-bet'] ?? '100');
   const commission = parseInt(opts['commission'] ?? '2');
-  const gwPort = parseInt(opts['port'] ?? '9001');
   const timeout = parseInt(opts['timeout'] ?? '30000');
   const useLocal = opts['local'] === 'true';
+  const noAgent = opts['no-agent'] === 'true';
   let chipsUrl = opts['chips-url'] ?? '';
   let chipsToken = opts['chips-token'] ?? '';
 
-  // If no external points server specified, start a built-in one
+  // Built-in points server
   let builtInServer: any = null;
   if (!chipsUrl) {
     const { startBuiltInPointsServer } = await import('./built-in-points.js');
@@ -86,44 +81,49 @@ export async function startDealer(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  // Generate identity
   const identity = generateIdentity();
   const dealerId = identityToPlayerInfo(identity).id;
 
-  // Room config
   const roomConfig: RoomConfig = {
-    gameType,
-    chipProvider,
-    chipUnit: 'pts',
-    minBet,
-    maxBet,
-    buyIn,
-    commission,
+    gameType, chipProvider, chipUnit: 'pts',
+    minBet, maxBet, buyIn, commission,
   };
 
-  // Start gateway for OpenClaw
-  const gateway = new Gateway(gwPort);
+  // Connect to AI agent gateway
+  let agent: AgentBridge | null = null;
+  if (!noAgent) {
+    const agentConfig = resolveAgentConfig(opts);
+    if (agentConfig) {
+      agent = new AgentBridge(agentConfig);
+      try {
+        await agent.connect();
+        console.log(`[dealer] Connected to ${agentConfig.type} agent at ${agentConfig.url}`);
+      } catch (err) {
+        console.warn(`[dealer] Agent connection failed: ${(err as Error).message}`);
+        console.warn('[dealer] Running without agent. Use --no-agent to suppress this warning.');
+        agent = null;
+      }
+    }
+  }
 
-  // Logger that forwards to gateway
+  // Logger → agent + console
   const logger: DealerLogger = {
     info: (msg, ...a) => {
       console.log(`[dealer] ${msg}`, ...a);
-      gateway.send('log', { level: 'info', message: msg });
+      agent?.send('log', { level: 'info', message: msg });
     },
     warn: (msg, ...a) => {
       console.warn(`[dealer] ${msg}`, ...a);
-      gateway.send('log', { level: 'warn', message: msg });
+      agent?.send('log', { level: 'warn', message: msg });
     },
     error: (msg, ...a) => {
       console.error(`[dealer] ${msg}`, ...a);
-      gateway.send('log', { level: 'error', message: msg });
+      agent?.send('log', { level: 'error', message: msg });
     },
   };
 
-  // Transport
   const transport = useLocal ? new LocalTransport() : new CloudflareTransport();
 
-  // Create dealer
   const dealer = new DealerNode(plugin, identity, '0.1.0', roomConfig, transport, {
     actionTimeout: timeout,
     betweenHandsDelay: 5000,
@@ -131,39 +131,19 @@ export async function startDealer(args: string[]): Promise<void> {
     logger,
   });
 
-  // Events → gateway
+  // Push room events to agent
   dealer.onPhaseChange((phase) => {
-    gateway.send('phase-change', { phase });
+    agent?.send('phase-change', { phase });
   });
-
   dealer.onHandComplete_cb((result) => {
-    gateway.send('hand-complete', {
+    agent?.send('hand-complete', {
       winners: result.winners,
       pointChanges: result.pointChanges,
       commission: result.commission,
     });
   });
-
   dealer.onPlayerDisconnect((playerId) => {
-    gateway.send('player-disconnect', { playerId });
-  });
-
-  // Handle queries from OpenClaw
-  gateway.onMessage((msg) => {
-    if (msg.type === 'get-room-state') {
-      const state = dealer.getRoomState();
-      gateway.send('room-state', {
-        phase: state.phase,
-        handCount: state.handCount,
-        seats: [...state.seats.values()].map(s => ({
-          playerId: s.playerId,
-          status: s.status,
-          chipBalance: s.chipBalance,
-        })),
-      });
-    } else if (msg.type === 'get-config') {
-      gateway.send('room-config', roomConfig);
-    }
+    agent?.send('player-disconnect', { playerId });
   });
 
   // Start room
@@ -175,6 +155,8 @@ export async function startDealer(args: string[]): Promise<void> {
     process.exit(1);
   }
 
+  const agentStatus = agent?.isConnected() ? `connected (${opts['agent'] ?? 'openclaw'})` : 'not connected';
+
   console.log('');
   console.log('='.repeat(60));
   console.log(`  Game Claw Dealer`);
@@ -184,22 +166,18 @@ export async function startDealer(args: string[]): Promise<void> {
   console.log(`  Bet range:  ${minBet} - ${maxBet}`);
   console.log(`  Commission: ${commission}/player/hand`);
   console.log(`  Chips:      ${chipsUrl}`);
-  console.log(`  Timeout:    ${timeout}ms`);
+  console.log(`  Agent:      ${agentStatus}`);
   console.log('');
   console.log(`  Invite URL: ${inviteUrl}`);
-  console.log(`  Gateway:    ws://127.0.0.1:${gwPort}`);
   console.log(`  Dealer ID:  ${dealerId.slice(0, 16)}...`);
   console.log('='.repeat(60));
   console.log('');
-  console.log('Share the invite URL with players.');
-  console.log('OpenClaw can connect to the gateway for room monitoring.');
-  console.log('Press Ctrl+C to stop.\n');
+  console.log('Share the invite URL with players. Press Ctrl+C to stop.\n');
 
-  // Graceful shutdown
   const shutdown = async () => {
     console.log('\nShutting down...');
     await dealer.stop();
-    await gateway.stop();
+    await agent?.stop();
     if (builtInServer) await builtInServer.stop();
     process.exit(0);
   };
